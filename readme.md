@@ -20,8 +20,20 @@
 ## 升级提示
 如需回退到原来的外部验证码服务，只需在面板中关闭验证码开关即可。
 
-## Sponsors
-Thanks to the open source project license provided by [Jetbrains](https://www.jetbrains.com/)
 
-## How to Feedback
-Follow the template in the issue to submit your question correctly, and we will have someone follow up with you.
+既然我们是无痛开机场，那么怎么简单，怎么省钱怎么做
+安装教程（文字版）
+
+先准备好一台2+2以上的机器
+我们就选择最便宜的机器
+
+https://cloud.colocrossing.com/aff.php?aff=957&pid=114
+
+来自colocrossing的最便宜的2+2美机（支持支付宝）
+2G	2核	40G	40T/月	$16.16/年
+双十一优惠
+如果没有了那就自己谷歌一下“colocrossing优惠”
+
+安卓AA面板
+
+curl -sS -O https://raw.githubusercontent.com/kejilion/sh/main/kejilion.sh && chmod +x kejilion.sh && ./kejilion.sh
